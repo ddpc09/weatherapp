@@ -30,7 +30,10 @@ class WeatherMapper {
             city = response.location.name,
             condition = condition,
             code = conditionCode,
-            isDay = isDay
+            isDay = isDay,
+            feelsLike = response.current.feelslike_c,
+            humidity = response.current.humidity,
+            windSpeed = response.current.wind_kph
         )
     }
 }

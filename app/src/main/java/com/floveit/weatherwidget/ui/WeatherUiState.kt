@@ -7,4 +7,7 @@ data class WeatherUiState(
     val error: String? = null,
     val conditionCode: Int = 1000,
     val isDay: Boolean = true,
+    val feelsLike: Int = 0,
+    val humidity: Int = 0,
+    val windSpeed: Double = 0.0
 )

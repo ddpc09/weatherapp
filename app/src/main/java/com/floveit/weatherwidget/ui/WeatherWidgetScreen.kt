@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import com.floveit.weatherwidget.R
 import com.floveit.weatherwidget.viewmodel.WeatherViewModel
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 //@Composable
@@ -53,10 +54,16 @@ fun WeatherWidgetScreen(viewModel: WeatherViewModel = koinViewModel()) {
         code = weatherState.conditionCode,
         isDay = weatherState.isDay
     )
-    val animationResId = getResIdForAnimation(animationName)
+//    val animationResId = getResIdForAnimation(animationName)
+
+    val animationResId = getResIdForAnimation(animationName, isDay = state.isDay)
 
     LaunchedEffect(Unit) {
-        viewModel.loadWeather("Kolkata")
+        while (true) {
+//            viewModel.loadWeather("Kolkata")
+            viewModel.loadWeatherFromLocation()
+            delay(15 * 60 * 1000) // 15 minutes
+        }
     }
 
 
@@ -74,24 +81,27 @@ fun WeatherWidgetScreen(viewModel: WeatherViewModel = koinViewModel()) {
             } else {
                 Text(text = state.city, fontSize = 20.sp, color = Color.White)
                 Text(text = "${state.temperature}°C", fontSize = 36.sp, color = Color.White)
+                Text(text = "Feels like: ${state.feelsLike}°C", color = Color.White)
+                Text(text = "Humidity: ${state.humidity}%", color = Color.White)
+                Text(text = "Wind: ${state.windSpeed} km/h", color = Color.White)
             }
         }
     }
 }
 
-fun getResIdForAnimation(name: String): Int {
+fun getResIdForAnimation(name: String, isDay: Boolean): Int {
     return when (name) {
-        "sunny" -> R.raw.testsunnygif
-        "partly_cloudy" -> R.raw.testsunnygif
-        "overcast" -> R.raw.testsunnygif
-        "mist_fog" -> R.raw.testsunnygif
-        "rainy" -> R.raw.testsunnygif
-        "snowy" -> R.raw.testsunnygif
-        "thunderstorm" -> R.raw.testsunnygif
-        "clear_night" -> R.raw.testsunnygif
-        "night_cloudy" -> R.raw.testsunnygif
-        "night_rainy" -> R.raw.testsunnygif
-        "night_thunderstorm" -> R.raw.testsunnygif
-        else -> R.raw.testsunnygif
+        "sunny" -> R.raw.sunny1
+        "partly_cloudy" -> R.raw.paartlycloudy
+        "overcast" -> R.raw.overcast1
+        "mist_fog" -> R.raw.fog1
+        "rainy" -> R.raw.rain
+        "snowy" -> R.raw.snowy
+        "thunderstorm" -> R.raw.thunder2
+        "clear_night" -> R.raw.clearnight
+        "night_cloudy" -> R.raw.cloudynight
+        "night_rainy" -> R.raw.rain
+        "night_thunderstorm" -> R.raw.thunder2
+        else -> if(isDay){R.raw.sunny1} else{R.raw.clearnight}
     }
 }
