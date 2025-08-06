@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.floveit.weatherwidget.data.WeatherRepository
 import com.floveit.weatherwidget.data.location.LocationRepository
+import com.floveit.weatherwidget.data.preferences.PreferencesManager
 import com.floveit.weatherwidget.ui.WeatherUiState
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 
 class WeatherViewModel(
     private val repository: WeatherRepository,
-    private val locationRepository: LocationRepository
+    private val locationRepository: LocationRepository,
+    private val preferences: PreferencesManager
 ) : ViewModel() {
 
     private val _weatherState = MutableStateFlow(WeatherUiState())
@@ -34,6 +36,18 @@ class WeatherViewModel(
 
     init {
         observeSearchQueryWithDebounce()
+    }
+
+    init {
+        viewModelScope.launch {
+            preferences.lastLocationFlow.collect { lastCity ->
+                if (!lastCity.isNullOrBlank()) {
+                    loadWeather(lastCity)
+                } else {
+                    loadWeather("Kolkata") // fallback default
+                }
+            }
+        }
     }
 
     fun updateSearchQuery(query: String) {
@@ -74,6 +88,14 @@ class WeatherViewModel(
                     WeatherUiState(error = it.localizedMessage ?: "Unknown Error")
                 }
             )
+        }
+    }
+
+    fun onLocationSelected(city: String) {
+        viewModelScope.launch {
+            preferences.saveLastLocation(city)
+            loadWeather(city)
+            updateSearchQuery("") // Clear text field
         }
     }
 }

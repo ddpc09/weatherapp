@@ -12,6 +12,7 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.floveit.weatherwidget.data.network.UserAgentInterceptor
+import com.floveit.weatherwidget.data.preferences.PreferencesManager
 import okhttp3.OkHttpClient
 
 
@@ -44,5 +45,8 @@ val appModule = module {
 
     single<LocationRepository> { LocationRepositoryImpl() }
 
-    viewModel { WeatherViewModel(get(), get()) }
+    single { PreferencesManager(get()) }
+
+    viewModel { WeatherViewModel(get(), get(), get()) }
+
 }
