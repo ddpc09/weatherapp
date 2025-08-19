@@ -8,7 +8,9 @@ data class WeatherResponse(
 data class LocationData(
     val name: String,
     val region: String,
-    val country: String
+    val country: String,
+    val tz_id: String? = null,
+    val localtime: String? = null
 )
 
 //data class CurrentWeatherData(

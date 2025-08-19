@@ -1,10 +1,13 @@
 package com.floveit.weatherwidget.di
 
+import com.floveit.weatherwidget.data.ForecastMapper
 import com.floveit.weatherwidget.data.WeatherMapper
 import com.floveit.weatherwidget.data.WeatherRepository
 import com.floveit.weatherwidget.data.WeatherRepositoryImpl
 import com.floveit.weatherwidget.data.location.LocationRepository
 import com.floveit.weatherwidget.data.location.LocationRepositoryImpl
+import com.floveit.weatherwidget.data.location.ReverseGeocoder
+import com.floveit.weatherwidget.data.location.ReverseGeocoderImpl
 import com.floveit.weatherwidget.data.network.WeatherApiService
 import com.floveit.weatherwidget.viewmodel.WeatherViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -39,7 +42,8 @@ val appModule = module {
         WeatherRepositoryImpl(
             apiService = get(),
             mapper = get(),
-            apiKey = "139850d338ae46aaafa62608253107"
+            apiKey = "139850d338ae46aaafa62608253107",
+            forecastMapper = get()
         ) as WeatherRepository
     }
 
@@ -47,6 +51,10 @@ val appModule = module {
 
     single { PreferencesManager(get()) }
 
-    viewModel { WeatherViewModel(get(), get(), get()) }
+    single { ForecastMapper() }
+
+    single<ReverseGeocoder> { ReverseGeocoderImpl(get()) }
+
+    viewModel { WeatherViewModel(get(), get(), get(), get()) }
 
 }
