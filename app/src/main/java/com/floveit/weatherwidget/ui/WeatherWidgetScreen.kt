@@ -22,11 +22,9 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -50,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -59,6 +58,10 @@ import com.floveit.weatherwidget.data.DailyForecast
 import com.floveit.weatherwidget.data.HourlyForecast
 import com.floveit.weatherwidget.viewmodel.WeatherViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 
 //@OptIn(ExperimentalMaterial3Api::class)
@@ -783,6 +786,33 @@ fun WeatherWidgetScreen(viewModel: WeatherViewModel = koinViewModel()) {
     }
 }
 
+//private fun LazyListScope.weeklyForecastItems(daily: List<DailyForecast>) {
+//    items(
+//        items = daily,
+//        key = { it.date }
+//    ) { d ->
+//        val name = getAnimationForCondition(d.conditionCode, isDay = true)
+//        val resId = getResIdForForecastAnimation(name, isDay = true)
+//
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(horizontal = 16.dp, vertical = 8.dp)
+//        ) {
+//            WeatherGifAnimation(resourceId = resId, modifier = Modifier.size(36.dp))
+//            Spacer(Modifier.width(10.dp))
+//            Text(text = d.date, color = Color.White, fontSize = 13.sp)
+//            Spacer(Modifier.weight(1f))
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                Text("${d.maxTempC.toInt()}°", color = Color.White, fontSize = 13.sp)
+//                Spacer(Modifier.width(10.dp))
+//                Text("${d.minTempC.toInt()}°", color = Color.LightGray, fontSize = 13.sp)
+//            }
+//        }
+//    }
+//}
+
 private fun LazyListScope.weeklyForecastItems(daily: List<DailyForecast>) {
     items(
         items = daily,
@@ -799,7 +829,10 @@ private fun LazyListScope.weeklyForecastItems(daily: List<DailyForecast>) {
         ) {
             WeatherGifAnimation(resourceId = resId, modifier = Modifier.size(36.dp))
             Spacer(Modifier.width(10.dp))
-            Text(text = d.date, color = Color.White, fontSize = 13.sp)
+
+            // ⬇️ was: Text(text = d.date, ...)
+            Text(text = dailyLabel(d.date), color = Color.White, fontSize = 13.sp)
+
             Spacer(Modifier.weight(1f))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("${d.maxTempC.toInt()}°", color = Color.White, fontSize = 13.sp)
@@ -809,6 +842,7 @@ private fun LazyListScope.weeklyForecastItems(daily: List<DailyForecast>) {
         }
     }
 }
+
 
 fun getResIdForAnimation(name: String, isDay: Boolean): Int {
     return when (name) {
@@ -1189,5 +1223,22 @@ private fun hourLabel(time: String): String {
         if (h == 0) h = 12 else if (h > 12) h -= 12
         "$h $ampm"
     } catch (_: Exception) { time }
+}
+
+private fun dailyLabel(dateStr: String): String {
+    return try {
+        val today = LocalDate.now()
+        val d = LocalDate.parse(dateStr) // expects "YYYY-MM-DD"
+        val diff = ChronoUnit.DAYS.between(today, d).toInt()
+        when (diff) {
+            0 -> "Today"
+            1 -> "Tomorrow"
+//            2 -> "Day after tomorrow"
+            else -> d.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault())
+        }
+    } catch (_: DateTimeParseException) {
+        // Fallback if format isn't parseable
+        dateStr
+    }
 }
 
