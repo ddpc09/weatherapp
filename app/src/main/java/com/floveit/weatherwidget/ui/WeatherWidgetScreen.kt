@@ -1,5 +1,6 @@
 package com.floveit.weatherwidget.ui
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -788,9 +790,123 @@ import java.util.Locale
 //    }
 //}
 
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun WeatherWidgetScreen(viewModel: WeatherViewModel = koinViewModel()) {
+//    val state by viewModel.weatherState.collectAsState()
+//    val query by viewModel.searchQuery.collectAsState()
+//    val suggestions by viewModel.locationSuggestions.collectAsState()
+//
+//    val conditionText = weatherConditionDescriptions[state.conditionCode]?.let {
+//        if (state.isDay) it.first else it.second
+//    } ?: "Unknown"
+//
+//    val animationName = getAnimationForCondition(state.conditionCode, state.isDay)
+//    val animationResId = getResIdForAnimation(animationName, isDay = state.isDay)
+//
+//    // One shared toggle for BOTH Hourly + Weekly
+//    var forecastsExpanded by rememberSaveable { mutableStateOf(false) }
+//    val forecastsRot by animateFloatAsState(
+//        targetValue = if (forecastsExpanded) 180f else 0f,
+//        label = "forecastsRot"
+//    )
+//
+//    // ── Center the whole vertical column and limit its width
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(Color.Black)
+//    ) {
+//        LazyColumn(
+//            modifier = Modifier
+//                .widthIn(max = 520.dp)          // <— constrain width
+//                .fillMaxHeight()
+//                .align(Alignment.TopCenter),     // <— center the column
+//            contentPadding = PaddingValues(bottom = 12.dp, start = 16.dp, end = 16.dp, top = 0.dp)
+//        ) {
+//            // ── Current (animation → description → metrics → location/edit)
+//            item {
+//                CurrentWeatherSection(
+//                    state = state,
+//                    conditionText = conditionText,
+//                    animationResId = animationResId,
+//                    query = query,
+//                    suggestions = suggestions,
+//                    onQueryChange = viewModel::updateSearchQuery,
+//                    onCitySelected = viewModel::onLocationSelected
+//                )
+//            }
+//
+//            // ── One header that controls BOTH Hourly + Weekly (collapsed by default)
+//            item {
+//                Spacer(Modifier.height(12.dp))
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .clickable { forecastsExpanded = !forecastsExpanded }
+//                        .padding(vertical = 8.dp)
+//                ) {
+//                    Image(
+//                        painter = painterResource(R.drawable.arrow),
+//                        contentDescription = if (forecastsExpanded) "Collapse" else "Expand",
+//                        modifier = Modifier
+//                            .align(Alignment.Center)
+//                            .size(36.dp)
+//                            .rotate(forecastsRot)
+//                    )
+//                }
+//            }
+//
+//            if (forecastsExpanded) {
+//                if (state.hourly.isNotEmpty()) {
+//                    item {
+//                        Spacer(Modifier.height(6.dp))
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.Center, // ⬅️ centers content
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(vertical = 4.dp)
+//                        ) {
+//                            Image(
+//                                painter = painterResource(R.drawable.hourlyforecast),
+//                                contentDescription = "Hourly",
+//                                modifier = Modifier.size(18.dp)
+//                            )
+//                            Spacer(Modifier.width(12.dp))
+//                            Text("Hourly forecast", color = Color.White, fontSize = 14.sp)
+//                        }
+//                    }
+//                    item {
+//                        HourlyRow(hourly = state.hourly, isDay = state.isDay)
+//                    }
+//                }
+//
+//                if (state.daily.isNotEmpty()) {
+//                    item {
+//                        Spacer(Modifier.height(12.dp))
+//                        Text(
+//                            text = "Weekly forecast",
+//                            color = Color.White,
+//                            fontSize = 16.sp,
+//                            modifier = Modifier.fillMaxWidth(),
+//                            textAlign = TextAlign.Center // ⬅️ centers the text
+//                        )
+//                        Spacer(Modifier.height(6.dp))
+//                    }
+//                    weeklyForecastItems(state.daily)
+//                }
+//            }
+//        }
+//    }
+//}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WeatherWidgetScreen(viewModel: WeatherViewModel = koinViewModel()) {
+fun WeatherWidgetScreen(
+    modifier: Modifier = Modifier,                   // parent controls size & position
+    viewModel: WeatherViewModel = koinViewModel()
+) {
     val state by viewModel.weatherState.collectAsState()
     val query by viewModel.searchQuery.collectAsState()
     val suggestions by viewModel.locationSuggestions.collectAsState()
@@ -809,95 +925,158 @@ fun WeatherWidgetScreen(viewModel: WeatherViewModel = koinViewModel()) {
         label = "forecastsRot"
     )
 
-    // ── Center the whole vertical column and limit its width
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
+    // Self-sizing container: wraps content height & animates on expand/collapse
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth()                  // let parent width decide; we center inside
+            .wrapContentHeight()             // <-- key: don't occupy whole screen height
+            .animateContentSize()            // <-- animate height changes smoothly
+            .background(color = Color.Black)
+            .padding(bottom = 12.dp)
+            .then(Modifier),                 // keep extensible
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 0.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .widthIn(max = 520.dp)          // <— constrain width
-                .fillMaxHeight()
-                .align(Alignment.TopCenter),     // <— center the column
-            contentPadding = PaddingValues(bottom = 12.dp, start = 16.dp, end = 16.dp, top = 0.dp)
-        ) {
-            // ── Current (animation → description → metrics → location/edit)
-            item {
-                CurrentWeatherSection(
-                    state = state,
-                    conditionText = conditionText,
-                    animationResId = animationResId,
-                    query = query,
-                    suggestions = suggestions,
-                    onQueryChange = viewModel::updateSearchQuery,
-                    onCitySelected = viewModel::onLocationSelected
-                )
-            }
-
-            // ── One header that controls BOTH Hourly + Weekly (collapsed by default)
-            item {
-                Spacer(Modifier.height(12.dp))
-                Box(
+        // Center the inner column and constrain width so it looks like one middle column
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { forecastsExpanded = !forecastsExpanded }
-                        .padding(vertical = 8.dp)
+                        .widthIn(max = 520.dp)   // middle column width
+                        .wrapContentHeight()
                 ) {
-                    Image(
-                        painter = painterResource(R.drawable.arrow),
-                        contentDescription = if (forecastsExpanded) "Collapse" else "Expand",
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(36.dp)
-                            .rotate(forecastsRot)
+                    // ── Current (animation → description → metrics → location/edit)
+                    CurrentWeatherSection(
+                        state = state,
+                        conditionText = conditionText,
+                        animationResId = animationResId,
+                        query = query,
+                        suggestions = suggestions,
+                        onQueryChange = viewModel::updateSearchQuery,
+                        onCitySelected = viewModel::onLocationSelected
                     )
-                }
-            }
 
-            if (forecastsExpanded) {
-                if (state.hourly.isNotEmpty()) {
-                    item {
-                        Spacer(Modifier.height(6.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center, // ⬅️ centers content
+                    // ── Single toggle header for BOTH forecasts
+                    Spacer(Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { forecastsExpanded = !forecastsExpanded }
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.arrow),
+                            contentDescription = if (forecastsExpanded) "Collapse" else "Expand",
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.hourlyforecast),
-                                contentDescription = "Hourly",
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text("Hourly forecast", color = Color.White, fontSize = 14.sp)
+                                .align(Alignment.Center)
+                                .size(36.dp)
+                                .rotate(forecastsRot)
+                        )
+                    }
+
+                    // ── Forecasts block with animated collapse (affects overall height)
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = forecastsExpanded,
+                        enter = androidx.compose.animation.expandVertically(expandFrom = Alignment.Top) +
+                                androidx.compose.animation.fadeIn(),
+                        exit  = androidx.compose.animation.shrinkVertically(shrinkTowards = Alignment.Top) +
+                                androidx.compose.animation.fadeOut(),
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+
+                            // ── Hourly
+                            if (state.hourly.isNotEmpty()) {
+                                Spacer(Modifier.height(6.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                ) {
+                                    Image(
+                                        painter = painterResource(R.drawable.hourlyforecast),
+                                        contentDescription = "Hourly",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Text("Hourly forecast", color = Color.White, fontSize = 16.sp)
+                                }
+
+                                // Larger, uniform gap between hourly items
+                                androidx.compose.foundation.lazy.LazyRow(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 100.dp),
+                                    contentPadding = PaddingValues(horizontal = 0.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                                ) {
+                                    items(state.hourly.size, key = { i -> state.hourly[i].time }) { i ->
+                                        val h = state.hourly[i]
+                                        val animName = getAnimationForCondition(h.conditionCode, isDay = h.isDay)
+                                        val resId = getResIdForHourlyAnimation(animName, isDay = h.isDay)
+
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.width(72.dp)
+                                        ) {
+                                            Text(text = hourLabel(h.time), color = Color.White, fontSize = 12.sp)
+                                            WeatherGifAnimation(resourceId = resId, modifier = Modifier.height(40.dp))
+                                            Text(text = "${h.tempC.toInt()}°", color = Color.White, fontSize = 12.sp)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── Weekly
+                            if (state.daily.isNotEmpty()) {
+                                Spacer(Modifier.height(12.dp))
+                                Text(
+                                    text = "Weekly forecast",
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(Modifier.height(6.dp))
+
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    state.daily.forEach { d ->
+                                        val name = getAnimationForCondition(d.conditionCode, isDay = true)
+                                        val resId = getResIdForForecastAnimation(name, isDay = true)
+
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp)
+                                        ) {
+                                            WeatherGifAnimation(resourceId = resId, modifier = Modifier.size(36.dp))
+                                            Spacer(Modifier.width(10.dp))
+                                            Text(text = dailyLabel(d.date), color = Color.White, fontSize = 13.sp)
+                                            Spacer(Modifier.weight(1f))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text("${d.maxTempC.toInt()}°", color = Color.White, fontSize = 13.sp)
+                                                Spacer(Modifier.width(10.dp))
+                                                Text("${d.minTempC.toInt()}°", color = Color.LightGray, fontSize = 13.sp)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                    item {
-                        HourlyRow(hourly = state.hourly, isDay = state.isDay)
-                    }
-                }
-
-                if (state.daily.isNotEmpty()) {
-                    item {
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            text = "Weekly forecast",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center // ⬅️ centers the text
-                        )
-                        Spacer(Modifier.height(6.dp))
-                    }
-                    weeklyForecastItems(state.daily)
                 }
             }
         }
     }
 }
+
+
 
 
 //private fun LazyListScope.weeklyForecastItems(daily: List<DailyForecast>) {
