@@ -1,5 +1,7 @@
 package com.floveit.weatherwidget.ui
 
+import com.floveit.weatherwidget.R
+
 fun getAnimationForCondition(code: Int, isDay: Boolean): String {
     return when (code) {
         // ☀️ Clear/Sunny
@@ -36,5 +38,41 @@ fun getAnimationForCondition(code: Int, isDay: Boolean): String {
         in listOf(1279, 1282) -> if (isDay) "snowy" else "night_thunderstorm"
 
         else -> if (isDay) "sunny" else "clear_night" // Fallback
+    }
+}
+
+// --- NEW: forecast-only resolver ---
+fun getResIdForForecastAnimation(name: String, isDay: Boolean): Int {
+    return when (name) {
+        "sunny"             -> if (isDay) R.raw.sunnyic else R.raw.clearnightic
+        "partly_cloudy"     -> if (isDay) R.raw.partlycloudydayic else R.raw.partlycloudynightic
+        "overcast"          -> if (isDay) R.raw.overcastic else R.raw.overcastic
+        "mist_fog"          -> if (isDay) R.raw.fogic else R.raw.fogic
+        "rainy"             -> if (isDay) R.raw.rainyic else R.raw.rainyic
+        "snowy"             -> if (isDay) R.raw.snowyic else R.raw.snowyic
+        "thunderstorm"      -> if (isDay) R.raw.thunderic else R.raw.thunderic
+        "clear_night"       -> R.raw.clearnightic
+        "night_cloudy"      -> R.raw.partlycloudynightic
+        "night_rainy"       -> R.raw.rainyic
+        "night_thunderstorm"-> R.raw.thunderic
+        else                -> if (isDay) R.raw.sunnyic else R.raw.clearnightic
+    }
+}
+
+// --- NEW: hourly-only resolver ---
+fun getResIdForHourlyAnimation(name: String, isDay: Boolean): Int {
+    return when (name) {
+        "sunny"             -> if (isDay) R.raw.sunnyic else R.raw.clearnightic
+        "partly_cloudy"     -> if (isDay) R.raw.partlycloudydayic else R.raw.partlycloudynightic
+        "overcast"          -> if (isDay) R.raw.overcastic else R.raw.overcastic
+        "mist_fog"          -> if (isDay) R.raw.fogic else R.raw.fogic
+        "rainy"             -> if (isDay) R.raw.rainyic else R.raw.rainyic
+        "snowy"             -> if (isDay) R.raw.snowyic else R.raw.snowyic
+        "thunderstorm"      -> if (isDay) R.raw.thunderic else R.raw.thunderic
+        "clear_night"       -> R.raw.clearnightic
+        "night_cloudy"      -> R.raw.partlycloudynightic
+        "night_rainy"       -> R.raw.rainyic
+        "night_thunderstorm"-> R.raw.thunderic
+        else                -> if (isDay) R.raw.sunnyic else R.raw.clearnightic
     }
 }
