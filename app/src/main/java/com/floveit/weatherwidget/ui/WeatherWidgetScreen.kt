@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,6 +51,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -665,6 +667,127 @@ import java.util.Locale
 //    }
 //}
 
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun WeatherWidgetScreen(viewModel: WeatherViewModel = koinViewModel()) {
+//    val state by viewModel.weatherState.collectAsState()
+//    val query by viewModel.searchQuery.collectAsState()
+//    val suggestions by viewModel.locationSuggestions.collectAsState()
+//
+//    val conditionText = weatherConditionDescriptions[state.conditionCode]?.let {
+//        if (state.isDay) it.first else it.second
+//    } ?: "Unknown"
+//
+//    val animationName = getAnimationForCondition(state.conditionCode, state.isDay)
+//    val animationResId = getResIdForAnimation(animationName, isDay = state.isDay)
+//
+//    // One shared toggle for BOTH Hourly + Weekly
+//    var forecastsExpanded by rememberSaveable { mutableStateOf(false) }
+//    val forecastsRot by animateFloatAsState(
+//        targetValue = if (forecastsExpanded) 180f else 0f,
+//        label = "forecastsRot"
+//    )
+//
+//    LazyColumn(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(Color.Black),
+//        contentPadding = PaddingValues(bottom = 12.dp)
+//    ) {
+//        // ── Current (animation → description → metrics → location/edit)
+//        item {
+//            CurrentWeatherSection(
+//                state = state,
+//                conditionText = conditionText,
+//                animationResId = animationResId,
+//                query = query,
+//                suggestions = suggestions,
+//                onQueryChange = viewModel::updateSearchQuery,
+//                onCitySelected = viewModel::onLocationSelected
+//            )
+//        }
+//
+//        // ── One header that controls BOTH Hourly + Weekly (collapsed by default)
+//        item {
+//            Spacer(Modifier.height(12.dp))
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clickable { forecastsExpanded = !forecastsExpanded }
+//                    .padding(horizontal = 16.dp, vertical = 8.dp)
+//            ) {
+//                // left icon
+//                Image(
+//                    painter = painterResource(R.drawable.hourlyforecast),
+//                    contentDescription = "Forecasts",
+//                    modifier = Modifier
+//                        .align(Alignment.CenterStart)
+//                        .size(18.dp)
+//                )
+//                // center arrow
+//                Image(
+//                    painter = painterResource(R.drawable.arrow), // ensure this exists
+//                    contentDescription = if (forecastsExpanded) "Collapse" else "Expand",
+//                    modifier = Modifier
+//                        .align(Alignment.Center)
+//                        .size(36.dp)
+//                        .rotate(forecastsRot)
+//                )
+//                // right text
+////                Text(
+////                    text = "Forecasts",
+////                    color = Color.White,
+////                    fontSize = 14.sp,
+////                    modifier = Modifier.align(Alignment.CenterEnd)
+////                )
+//            }
+//        }
+//
+//        // ── Body: render Hourly then Weekly ONLY when expanded
+//        if (forecastsExpanded) {
+//            if (state.hourly.isNotEmpty()) {
+//                // Hourly label (non-clickable)
+//                item {
+//                    Spacer(Modifier.height(6.dp))
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+//                    ) {
+//                        Image(
+//                            painter = painterResource(R.drawable.hourlyforecast),
+//                            contentDescription = "Hourly",
+//                            modifier = Modifier.size(18.dp)
+//                        )
+//                        Spacer(Modifier.width(8.dp))
+//                        Text("Hourly forecast", color = Color.White, fontSize = 14.sp)
+//                    }
+//                }
+//                // Hourly list (horizontal = fine)
+//                item {
+//                    HourlyRow(hourly = state.hourly, isDay = state.isDay)
+//                }
+//            }
+//
+//            if (state.daily.isNotEmpty()) {
+//                // Weekly label
+//                item {
+//                    Spacer(Modifier.height(12.dp))
+//                    Text(
+//                        text = "Weekly forecast",
+//                        color = Color.White,
+//                        fontSize = 14.sp,
+//                        modifier = Modifier.padding(horizontal = 16.dp)
+//                    )
+//                    Spacer(Modifier.height(6.dp))
+//                }
+//
+//                // Weekly rows emitted into the SAME LazyColumn
+//                weeklyForecastItems(state.daily)
+//            }
+//        }
+//    }
+//}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherWidgetScreen(viewModel: WeatherViewModel = koinViewModel()) {
@@ -686,105 +809,96 @@ fun WeatherWidgetScreen(viewModel: WeatherViewModel = koinViewModel()) {
         label = "forecastsRot"
     )
 
-    LazyColumn(
+    // ── Center the whole vertical column and limit its width
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black),
-        contentPadding = PaddingValues(bottom = 12.dp)
+            .background(Color.Black)
     ) {
-        // ── Current (animation → description → metrics → location/edit)
-        item {
-            CurrentWeatherSection(
-                state = state,
-                conditionText = conditionText,
-                animationResId = animationResId,
-                query = query,
-                suggestions = suggestions,
-                onQueryChange = viewModel::updateSearchQuery,
-                onCitySelected = viewModel::onLocationSelected
-            )
-        }
-
-        // ── One header that controls BOTH Hourly + Weekly (collapsed by default)
-        item {
-            Spacer(Modifier.height(12.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { forecastsExpanded = !forecastsExpanded }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                // left icon
-                Image(
-                    painter = painterResource(R.drawable.hourlyforecast),
-                    contentDescription = "Forecasts",
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .size(18.dp)
+        LazyColumn(
+            modifier = Modifier
+                .widthIn(max = 520.dp)          // <— constrain width
+                .fillMaxHeight()
+                .align(Alignment.TopCenter),     // <— center the column
+            contentPadding = PaddingValues(bottom = 12.dp, start = 16.dp, end = 16.dp, top = 0.dp)
+        ) {
+            // ── Current (animation → description → metrics → location/edit)
+            item {
+                CurrentWeatherSection(
+                    state = state,
+                    conditionText = conditionText,
+                    animationResId = animationResId,
+                    query = query,
+                    suggestions = suggestions,
+                    onQueryChange = viewModel::updateSearchQuery,
+                    onCitySelected = viewModel::onLocationSelected
                 )
-                // center arrow
-                Image(
-                    painter = painterResource(R.drawable.arrow), // ensure this exists
-                    contentDescription = if (forecastsExpanded) "Collapse" else "Expand",
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(36.dp)
-                        .rotate(forecastsRot)
-                )
-                // right text
-//                Text(
-//                    text = "Forecasts",
-//                    color = Color.White,
-//                    fontSize = 14.sp,
-//                    modifier = Modifier.align(Alignment.CenterEnd)
-//                )
             }
-        }
 
-        // ── Body: render Hourly then Weekly ONLY when expanded
-        if (forecastsExpanded) {
-            if (state.hourly.isNotEmpty()) {
-                // Hourly label (non-clickable)
-                item {
-                    Spacer(Modifier.height(6.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.hourlyforecast),
-                            contentDescription = "Hourly",
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text("Hourly forecast", color = Color.White, fontSize = 14.sp)
+            // ── One header that controls BOTH Hourly + Weekly (collapsed by default)
+            item {
+                Spacer(Modifier.height(12.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { forecastsExpanded = !forecastsExpanded }
+                        .padding(vertical = 8.dp)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.arrow),
+                        contentDescription = if (forecastsExpanded) "Collapse" else "Expand",
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(36.dp)
+                            .rotate(forecastsRot)
+                    )
+                }
+            }
+
+            if (forecastsExpanded) {
+                if (state.hourly.isNotEmpty()) {
+                    item {
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center, // ⬅️ centers content
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.hourlyforecast),
+                                contentDescription = "Hourly",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text("Hourly forecast", color = Color.White, fontSize = 14.sp)
+                        }
+                    }
+                    item {
+                        HourlyRow(hourly = state.hourly, isDay = state.isDay)
                     }
                 }
-                // Hourly list (horizontal = fine)
-                item {
-                    HourlyRow(hourly = state.hourly, isDay = state.isDay)
-                }
-            }
 
-            if (state.daily.isNotEmpty()) {
-                // Weekly label
-                item {
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        text = "Weekly forecast",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    Spacer(Modifier.height(6.dp))
+                if (state.daily.isNotEmpty()) {
+                    item {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = "Weekly forecast",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center // ⬅️ centers the text
+                        )
+                        Spacer(Modifier.height(6.dp))
+                    }
+                    weeklyForecastItems(state.daily)
                 }
-
-                // Weekly rows emitted into the SAME LazyColumn
-                weeklyForecastItems(state.daily)
             }
         }
     }
 }
+
 
 //private fun LazyListScope.weeklyForecastItems(daily: List<DailyForecast>) {
 //    items(
@@ -1140,18 +1254,17 @@ private fun HourlyRow(hourly: List<HourlyForecast>, isDay: Boolean) {
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 100.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(44.dp) // ⬅️ sets uniform gap
     ) {
         items(hourly.size, key = { i -> hourly[i].time }) { i ->
             val h = hourly[i]
             val animName = getAnimationForCondition(h.conditionCode, isDay = h.isDay)
-            val resId = getResIdForHourlyAnimation(animName, isDay = h.isDay) // or getResIdForAnimation
+            val resId = getResIdForHourlyAnimation(animName, isDay = h.isDay)
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .width(72.dp)
-                    .padding(end = 12.dp)
+                modifier = Modifier.width(72.dp)
             ) {
                 Text(text = hourLabel(h.time), color = Color.White, fontSize = 12.sp)
                 WeatherGifAnimation(resourceId = resId, modifier = Modifier.height(40.dp))
